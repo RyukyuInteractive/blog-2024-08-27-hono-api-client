@@ -1,33 +1,27 @@
+import { vValidator } from "@hono/valibot-validator"
 import { Hono } from "hono"
 import { hc } from "hono/client"
-import type { BlankEnv, Schema } from "hono/types"
-import type { StatusCode } from "hono/utils/http-status"
+import { literal, object, optional, parse } from "valibot"
+import { vItem } from "~/models/item"
 
-type CustomSchema<T extends Schema> = T
+const hono = new Hono()
 
-type AppSchema = CustomSchema<{
-  "/v0/item/:item": {
-    $get: {
-      input: {
-        param: {
-          item: string
-        }
-        query: {
-          print?: "pretty"
-        }
-      }
-      output: {
-        type: "story" | "comment" | "job" | "poll" | "pollopt"
-      }
-      outputFormat: "json"
-      status: StatusCode
-    }
-  }
-}>
+const app = hono.get(
+  "/v0/item/:item",
+  vValidator("query", object({ print: optional(literal("pretty")) })),
+  async (c) => {
+    const resp = await fetch(c.req.url, {
+      headers: { "Content-Type": "application/json" },
+    })
+    const json = await resp.json()
+    const result = parse(vItem, json)
+    return c.json(result)
+  },
+)
 
-const hono = new Hono<BlankEnv, AppSchema>()
-
-const client = hc<typeof hono>("https://hacker-news.firebaseio.com")
+const client = hc<typeof app>("https://hacker-news.firebaseio.com", {
+  fetch: app.request,
+})
 
 const resp = await client.v0.item[":item"].$get({
   param: { item: "8863.json" },

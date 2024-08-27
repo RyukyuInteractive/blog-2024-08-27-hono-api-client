@@ -1,20 +1,32 @@
-import { vValidator } from "@hono/valibot-validator"
-import { Hono } from "hono"
+import type { Hono } from "hono"
 import { hc } from "hono/client"
-import { type InferOutput, literal, object, optional } from "valibot"
-import type { vItem } from "~/models/item"
+import type { BlankEnv } from "hono/types"
+import type { StatusCode } from "hono/utils/http-status"
 
-const hono = new Hono()
+type AppType = Hono<
+  BlankEnv,
+  {
+    "/v0/item/:item": {
+      $get: {
+        input: {
+          param: {
+            item: string
+          }
+          query: {
+            print?: "pretty"
+          }
+        }
+        output: {
+          type: "story" | "comment" | "job" | "poll" | "pollopt"
+        }
+        outputFormat: "json"
+        status: StatusCode
+      }
+    }
+  }
+>
 
-const app = hono.get(
-  "/v0/item/:item",
-  vValidator("query", object({ print: optional(literal("pretty")) })),
-  async (c) => {
-    return c.json({} as InferOutput<typeof vItem>)
-  },
-)
-
-const client = hc<typeof app>("https://hacker-news.firebaseio.com")
+const client = hc<AppType>("https://hacker-news.firebaseio.com")
 
 const resp = await client.v0.item[":item"].$get({
   param: { item: "8863.json" },
