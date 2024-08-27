@@ -1,11 +1,15 @@
 {
-  "name": "blog-2024-08-26-hono-api-client",
-  "module": "index.ts",
+  "name": "blog-2024-08-27-hono-api-client",
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@hono/valibot-validator": "^0.3.0",
+    "hono": "^4.5.8",
+    "valibot": "^0.38.0"
   }
 }
